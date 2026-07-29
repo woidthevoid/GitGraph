@@ -221,7 +221,7 @@ func PrintMonths() {
 			break
 		}
 	}
-	fmt.Printf("\n")
+	fmt.Print("\n")
 }
 
 func PrintDayCol(day int) {
@@ -255,7 +255,7 @@ func PrintCell(val int, today bool) {
 	}
 
 	if val == 0 {
-		fmt.Printf(escape + "  - " + "\033[0m")
+		fmt.Print(escape + "  - " + "\033[0m")
 		return
 	}
 
@@ -267,7 +267,7 @@ func PrintCell(val int, today bool) {
 		str = "%d "
 	}
 
-	fmt.Printf(escape+str+"\033[0m", val)
+	fmt.Print(escape+str+"\033[0m", val)
 }
 
 // GetBeginningOfDay gets the time a day begins in a specific timezone and returns it.
