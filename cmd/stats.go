@@ -36,7 +36,10 @@ func init() {
 	rootCmd.AddCommand(statsCmd)
 
 	statsCmd.Flags().StringP("email", "e", "", "the email of the git author")
-	statsCmd.MarkFlagRequired("email")
+	err := statsCmd.MarkFlagRequired("email")
+	if err != nil {
+		return
+	}
 }
 
 // ProcessRepos takes email as parameter and returns a commit map for the last sinx months.
@@ -92,7 +95,10 @@ func FillCommits(email string, path string, commits map[int]int) map[int]int {
 	if err != nil {
 		panic(err)
 	}
-	repo.Close()
+	failure := repo.Close()
+	if failure != nil {
+		return nil
+	}
 	return commits
 }
 
@@ -228,7 +234,7 @@ func PrintDayCol(day int) {
 	case 5:
 		out = " Fri"
 	}
-	fmt.Printf(out)
+	fmt.Print(out)
 }
 
 // PrintCell colors the different cells with a color based on amount of commits, todays date
@@ -255,9 +261,9 @@ func PrintCell(val int, today bool) {
 
 	str := "  %d "
 	switch {
-	case val >= 10:
-		str = " %d "
 	case val >= 100:
+		str = " %d "
+	case val >= 10:
 		str = "%d "
 	}
 
