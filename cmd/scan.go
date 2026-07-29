@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"bufio"
@@ -8,11 +8,37 @@ import (
 	"os"
 	"os/user"
 	"strings"
+
+	"github.com/spf13/cobra"
 )
+
+var scanCmd = &cobra.Command{
+	Use:   "scan",
+	Short: "Scan a folder for git repositories",
+	Long: `Recursively walks the given folder and searches for git repos,
+saves them so stats can process them later`,
+	Run: func(cmd *cobra.Command, args []string) {
+		folder, err := cmd.Flags().GetString("folder")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		folders := RecursivelyScanFolder(folder)
+		filepath := GetFilePath()
+		AddSliceToFile(filepath, folders)
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(scanCmd)
+
+	scanCmd.Flags().StringP("folder", "f", "", "folder to scan")
+	scanCmd.MarkFlagRequired("folder")
+}
 
 // Searches folder and sub folders for .git, appends them to slice.
 // vendor and node modules folders are ignored.
-func scanFolders(folders []string, folder string) []string {
+func ScanFolders(folders []string, folder string) []string {
 	folder = strings.TrimSuffix(folder, "/")
 
 	f, err := os.Open(folder)
@@ -43,20 +69,20 @@ func scanFolders(folders []string, folder string) []string {
 			if file.Name() == "vendor" || file.Name() == "node_modules" {
 				continue
 			}
-			folders = scanFolders(folders, path)
+			folders = ScanFolders(folders, path)
 		}
 	}
 	return folders
 }
 
 // Starts the scanFolders function.
-func recursivelyScanFolder(folder string) []string {
-	return scanFolders(make([]string, 0), folder)
+func RecursivelyScanFolder(folder string) []string {
+	return ScanFolders(make([]string, 0), folder)
 }
 
 // Returns file path of the repo list.
 // Will create a new file if its not found.
-func getFilePath() string {
+func GetFilePath() string {
 	usr, err := user.Current()
 	if err != nil {
 		log.Fatal(err)
@@ -68,15 +94,15 @@ func getFilePath() string {
 }
 
 // Adds a slice to a given file.
-func addSliceToFile(filepath string, newRepos []string) {
-	existingRepos := parseFileToSlice(filepath)
-	repos := joinSlices(newRepos, existingRepos)
-	dumpSlicesToFile(repos, filepath)
+func AddSliceToFile(filepath string, newRepos []string) {
+	existingRepos := ParseFileToSlice(filepath)
+	repos := JoinSlices(newRepos, existingRepos)
+	DumpSlicesToFile(repos, filepath)
 }
 
 // Parses contents of a file to a string slice.
-func parseFileToSlice(filepath string) []string {
-	f := openFile(filepath)
+func ParseFileToSlice(filepath string) []string {
+	f := OpenFile(filepath)
 	defer f.Close()
 
 	var lines []string
@@ -93,7 +119,7 @@ func parseFileToSlice(filepath string) []string {
 }
 
 // Writes slice to given file.
-func dumpSlicesToFile(repos []string, filepath string) {
+func DumpSlicesToFile(repos []string, filepath string) {
 	content := strings.Join(repos, "\n")
 	w := os.WriteFile(filepath, []byte(content), 0755)
 	if w != nil {
@@ -102,26 +128,19 @@ func dumpSlicesToFile(repos []string, filepath string) {
 }
 
 // Opens file at filepath or creates it if it doesnt exist.
-func openFile(filepath string) *os.File {
-	f, err := os.OpenFile(filepath, os.O_APPEND|os.O_WRONLY, 0755)
+func OpenFile(filepath string) *os.File {
+	f, err := os.OpenFile(filepath, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
-		if os.IsExist(err) {
-			_, err := os.Create(filepath)
-			if err != nil {
-				panic(err)
-			}
-		} else {
-			panic(err)
-		}
+		panic(err)
 	}
 	return f
 }
 
-// Joins slices and uses sliceContains to see if duplicate values
+// Joins slices and uses SliceContains to see if duplicate values
 // are present, if not, new values are appended.
-func joinSlices(new []string, old []string) []string {
+func JoinSlices(new []string, old []string) []string {
 	for _, i := range new {
-		if !sliceContains(old, i) {
+		if !SliceContains(old, i) {
 			old = append(old, i)
 		}
 	}
@@ -129,7 +148,7 @@ func joinSlices(new []string, old []string) []string {
 }
 
 // Checks to see if slice contains value, returns a true or false
-func sliceContains(slice []string, value string) bool {
+func SliceContains(slice []string, value string) bool {
 	for _, v := range slice {
 		if v == value {
 			return true
