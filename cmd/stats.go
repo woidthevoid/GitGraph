@@ -121,13 +121,15 @@ func CalcOffset() int {
 }
 
 func CountDaysSince(date time.Time) int {
-	days := 0
-	now := GetBeginningOfDay(date)
-	for date.Before(now) {
-		days++
-		if days > daysSixMonths {
-			return outOfRange
-		}
+	now := GetBeginningOfDay(time.Now())
+	commitDate := GetBeginningOfDay(date)
+	if commitDate.After(now) {
+		return 0
+	}
+	days := int(now.Sub(commitDate).Hours() / 24)
+
+	if days > daysSixMonths {
+		return outOfRange
 	}
 	return days
 }
@@ -229,6 +231,8 @@ func PrintDayCol(day int) {
 	fmt.Printf(out)
 }
 
+// PrintCell colors the different cells with a color based on amount of commits, todays date
+// will come up as purple.
 func PrintCell(val int, today bool) {
 	escape := "\033[0;37;30m"
 	switch {
