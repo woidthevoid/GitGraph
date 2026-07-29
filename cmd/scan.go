@@ -36,7 +36,7 @@ func init() {
 	scanCmd.MarkFlagRequired("folder")
 }
 
-// Searches folder and sub folders for .git, appends them to slice.
+// ScanFolders searches folder and sub folders for .git, appends them to slice.
 // vendor and node modules folders are ignored.
 func ScanFolders(folders []string, folder string) []string {
 	folder = strings.TrimSuffix(folder, "/")
@@ -75,12 +75,12 @@ func ScanFolders(folders []string, folder string) []string {
 	return folders
 }
 
-// Starts the scanFolders function.
+// RecursivelyScanFolder starts the scanFolders function.
 func RecursivelyScanFolder(folder string) []string {
 	return ScanFolders(make([]string, 0), folder)
 }
 
-// Returns file path of the repo list.
+// GetFilePath Returns file path of the repo list.
 // Will create a new file if its not found.
 func GetFilePath() string {
 	usr, err := user.Current()
@@ -93,14 +93,14 @@ func GetFilePath() string {
 	return file
 }
 
-// Adds a slice to a given file.
+// AddSliceToFile adds a slice to a given file.
 func AddSliceToFile(filepath string, newRepos []string) {
 	existingRepos := ParseFileToSlice(filepath)
 	repos := JoinSlices(newRepos, existingRepos)
 	DumpSlicesToFile(repos, filepath)
 }
 
-// Parses contents of a file to a string slice.
+// ParseFileToSlice parses contents of a file to a string slice.
 func ParseFileToSlice(filepath string) []string {
 	f := OpenFile(filepath)
 	defer f.Close()
@@ -118,7 +118,7 @@ func ParseFileToSlice(filepath string) []string {
 	return lines
 }
 
-// Writes slice to given file.
+// DumpSlicesToFile writes slice to given file.
 func DumpSlicesToFile(repos []string, filepath string) {
 	content := strings.Join(repos, "\n")
 	w := os.WriteFile(filepath, []byte(content), 0755)
@@ -127,7 +127,7 @@ func DumpSlicesToFile(repos []string, filepath string) {
 	}
 }
 
-// Opens file at filepath or creates it if it doesnt exist.
+// OpenFile opens file at filepath or creates it if it doesnt exist.
 func OpenFile(filepath string) *os.File {
 	f, err := os.OpenFile(filepath, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
@@ -136,7 +136,7 @@ func OpenFile(filepath string) *os.File {
 	return f
 }
 
-// Joins slices and uses SliceContains to see if duplicate values
+// JoinSlices joins slices and uses SliceContains to see if duplicate values
 // are present, if not, new values are appended.
 func JoinSlices(new []string, old []string) []string {
 	for _, i := range new {
@@ -147,7 +147,7 @@ func JoinSlices(new []string, old []string) []string {
 	return old
 }
 
-// Checks to see if slice contains value, returns a true or false
+// SliceContains checks to see if slice contains value, returns a true or false
 func SliceContains(slice []string, value string) bool {
 	for _, v := range slice {
 		if v == value {

@@ -39,7 +39,7 @@ func init() {
 	statsCmd.MarkFlagRequired("email")
 }
 
-// Takes email as parameter and returns a commit map for the last sinx months.
+// ProcessRepos takes email as parameter and returns a commit map for the last sinx months.
 // Gets the git file path, parses file to a list of repos, fills a commit map with 0s
 // and fills the map with commits while iterating over repos.
 func ProcessRepos(email string) map[int]int {
@@ -58,7 +58,7 @@ func ProcessRepos(email string) map[int]int {
 	return commits
 }
 
-// Given a valid git repository, commits made my given email will be counted and returned as a map
+// FillCommits given a valid git repository, commits made my given email will be counted and returned as a map
 func FillCommits(email string, path string, commits map[int]int) map[int]int {
 	repo, err := git.PlainOpen(path)
 	if err != nil {
@@ -96,6 +96,7 @@ func FillCommits(email string, path string, commits map[int]int) map[int]int {
 	return commits
 }
 
+// CalcOffset calculates a offset based on current day, sets offset to value between 1-7 and returns offset.
 func CalcOffset() int {
 	var offset int
 	weekday := time.Now().Weekday()
@@ -119,15 +120,9 @@ func CalcOffset() int {
 	return offset
 }
 
-func BeginningDay(t time.Time) time.Time {
-	year, month, day := t.Date()
-	startOfDay := time.Date(year, month, day, 0, 0, 0, 0, t.Location())
-	return startOfDay
-}
-
 func CountDaysSince(date time.Time) int {
 	days := 0
-	now := BeginningDay(date)
+	now := GetBeginningOfDay(date)
 	for date.Before(now) {
 		days++
 		if days > daysSixMonths {
@@ -137,14 +132,14 @@ func CountDaysSince(date time.Time) int {
 	return days
 }
 
-// Builds git commit graph
+// PrintStats builds git commit graph.
 func PrintStats(commits map[int]int) {
 	keys := SortIntoSlice(commits)
 	cols := BuildCol(keys, commits)
 	PrintCells(cols)
 }
 
-// Takes map and sorts it into slice, based on integers.
+// SortIntoSlice takes map and sorts it into slice, based on integers.
 func SortIntoSlice(m map[int]int) []int {
 	var keys []int
 	for k := range m {
@@ -154,6 +149,7 @@ func SortIntoSlice(m map[int]int) []int {
 	return keys
 }
 
+// BuildCol bulds columns based on commits given and puts them on their respective day of the week.
 func BuildCol(keys []int, commits map[int]int) map[int]column {
 	cols := make(map[int]column)
 	col := column{}
@@ -174,6 +170,7 @@ func BuildCol(keys []int, commits map[int]int) map[int]column {
 	return cols
 }
 
+// PrintCells is used to print out all the different cells.
 func PrintCells(cols map[int]column) {
 	PrintMonths()
 	for j := 6; j >= 0; j-- {
@@ -263,6 +260,7 @@ func PrintCell(val int, today bool) {
 	fmt.Printf(escape+str+"\033[0m", val)
 }
 
+// GetBeginningOfDay gets the time a day begins in a specific timezone and returns it.
 func GetBeginningOfDay(t time.Time) time.Time {
 	year, month, day := t.Date()
 	startOfDay := time.Date(year, month, day, 0, 0, 0, 0, t.Location())
