@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   test:
-    name: Tidy, Vet, Test, Build
+    name: Testing and building project
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
