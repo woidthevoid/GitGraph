@@ -65,17 +65,17 @@ func ProcessRepos(email string) map[int]int {
 func FillCommits(email string, path string, commits map[int]int) map[int]int {
 	repo, err := git.PlainOpen(path)
 	if err != nil {
-		panic(err)
+		return commits
 	}
 
 	ref, err := repo.Head()
 	if err != nil {
-		panic(err)
+		return commits
 	}
 
 	iterator, err := repo.Log(&git.LogOptions{From: ref.Hash()})
 	if err != nil {
-		panic(err)
+		return commits
 	}
 
 	offset := CalcOffset()
@@ -93,12 +93,9 @@ func FillCommits(email string, path string, commits map[int]int) map[int]int {
 		return nil
 	})
 	if err != nil {
-		panic(err)
+		log.Printf("Warning: failed to iterate commits in %s: %v", path, err)
 	}
-	failure := repo.Close()
-	if failure != nil {
-		return nil
-	}
+
 	return commits
 }
 
@@ -267,7 +264,7 @@ func PrintCell(val int, today bool) {
 		str = "%d "
 	}
 
-	fmt.Print(escape+str+"\033[0m", val)
+	fmt.Printf(escape+str+"\033[0m", val)
 }
 
 // GetBeginningOfDay gets the time a day begins in a specific timezone and returns it.
