@@ -28,3 +28,4 @@ Next, run `gitgraph stats -e example@email.com` where you pass the email your co
 This should give you your contribution graph from the last six months, based on the repos that you scanned in the earlier step. 
 That is all!
 ## Examples
+![GitGraph contribution graph example](img.png "Contribution graph example")
